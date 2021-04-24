@@ -28,6 +28,8 @@ public class ObstacleMover : MonoBehaviour
         if (!IsMoving)
             return;
 
+        // Because we set the MoveSpeed to zero on collision
+        // this should NOT move until collision routine is completed
         var target = Vector3.MoveTowards(transform.position, destination, GameManager.Instance.MoveSpeed * Time.deltaTime);
         transform.position = target;
 

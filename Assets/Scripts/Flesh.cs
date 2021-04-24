@@ -17,7 +17,14 @@ public class Flesh : MonoBehaviour
 
     [SerializeField]
     float laneChangeDelay = 2f;
-    float langeChangeTime = 0f;
+    float laneChangeTime = 0f;
+
+    /// <summary>
+    /// Time left before lane change when collision happened
+    /// </summary>
+    float laneChangeTimeRemainder = 0f;
+
+    bool playerCollided = false;
 
     [SerializeField]
     Rigidbody rigidbody;
@@ -43,14 +50,22 @@ public class Flesh : MonoBehaviour
             transform.position.z
         );
 
-        langeChangeTime = Time.time + laneChangeDelay;
+        laneChangeTime = Time.time + laneChangeDelay;
+
+        GameManager.Instance.RegisterOnCollisionStart(OnCollisionStart);
+        GameManager.Instance.RegisterOnCollisionCompleted(OnCollisionCompleted);
     }
 
     private void Update()
     {
-        if (Time.time <= langeChangeTime || currentRotuine != null)
+        if (playerCollided || Time.time <= laneChangeTime || currentRotuine != null)
             return;
 
+        TriggerLaneChange();
+    }
+
+    void TriggerLaneChange()
+    {
         var id = LaneController.Instance.GetRandomLaneId();
         var lane = LaneController.Instance.GetLaneById(id);
 
@@ -66,18 +81,32 @@ public class Flesh : MonoBehaviour
             transform.position.z
         );
 
+        // We want to keep moving even after "resuming"
         while (Vector3.Distance(target, transform.position) > distanceToTarget)
         {
-            var position = Vector3.MoveTowards(transform.position, target, changeLaneSpeed * Time.deltaTime);
-            rigidbody.MovePosition(position);
+            // Don't move while we wait for the player collision routine to end
+            if (!playerCollided)
+            {
+                var position = Vector3.MoveTowards(transform.position, target, changeLaneSpeed * Time.deltaTime);
+                rigidbody.MovePosition(position);
+            }
+
             yield return new WaitForFixedUpdate();
         }
 
+        // Give it a frame to see the movement completed
         yield return new WaitForEndOfFrame();
+
+        // Wait until the player collision routine is done
+        // then we can continue with spawning
+        while (playerCollided)
+            yield return new WaitForEndOfFrame();
+
+        // Spawn a wait a bit to see things spawning
         SpawnObstacle();
         yield return new WaitForEndOfFrame();
 
-        langeChangeTime = Time.time + laneChangeDelay;
+        laneChangeTime = Time.time + laneChangeDelay;
         currentRotuine = null;
     }
 
@@ -92,5 +121,26 @@ public class Flesh : MonoBehaviour
             return;
         }
         obstacle.Spawn(transform.position.x, transform.position.z);
+    }
+
+    /// <summary>
+    /// Save how much time there was left before the next "spawn cycle"
+    /// </summary>
+    public void OnCollisionStart()
+    {
+        playerCollided = true;
+
+        laneChangeTimeRemainder = laneChangeTime - Time.time;
+        if (laneChangeTimeRemainder < 0)
+            laneChangeTimeRemainder = 0f; // We were at lane change time
+    }
+
+    public void OnCollisionCompleted()
+    {
+        // Update the wait time to be whatever time we had left
+        if (laneChangeTimeRemainder > 0)
+            laneChangeTime = Time.time + laneChangeTimeRemainder;
+
+        playerCollided = false;
     }
 }

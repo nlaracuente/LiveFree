@@ -7,6 +7,11 @@ public class Obstacle : MonoBehaviour
 {
     [SerializeField]
     ObstacleType type;
+
+    [SerializeField, Tooltip("How much damage to inflict")]
+    int damage = 1;
+    public int Damage { get { return damage; } }
+
     public ObstacleType Type { get { return type; } }
     public GameObject GameObject { get { return gameObject; } }
     public bool IsAvailable { get; protected set; } = true;
@@ -39,6 +44,12 @@ public class Obstacle : MonoBehaviour
             zPosition
         );
         obstacleMover.Move();
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+            GameManager.Instance.OnPlayerCollidedWithObstacle(this);
     }
 }
 

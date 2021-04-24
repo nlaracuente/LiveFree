@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HPUIController : IconController
+public class ScriptureBackgroundUIController : IconController
 {
     protected override int MaxIcons
     {
         get
         {
-            return GameManager.Instance.Player.MaxHP;
+            return GameManager.Instance.TotalScriptures;
         }
     }
 
@@ -16,7 +16,7 @@ public class HPUIController : IconController
     {
         get
         {
-            return GameManager.Instance.Player.HP;
+            return GameManager.Instance.TotalScriptures;
         }
     }
 }

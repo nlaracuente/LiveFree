@@ -21,6 +21,9 @@ public class Player : MonoBehaviour
 
     IEnumerator currentRotuine;
     public int HP { get; protected set; }
+    public int MaxHP { get { return maxHP; } }
+
+    bool collided = false;
 
     private void Awake()
     {
@@ -38,12 +41,15 @@ public class Player : MonoBehaviour
             transform.position.y,
             transform.position.z
         );
+
+        GameManager.Instance.RegisterOnCollisionStart(OnCollisionStart);
+        GameManager.Instance.RegisterOnCollisionCompleted(OnCollisionCompleted);
     }
 
     private void Update()
     {
         var direction = (int) Input.GetAxisRaw("Horizontal");
-        if (direction == 0 || currentRotuine != null)
+        if (collided || direction == 0 || currentRotuine != null)
             return;
 
         currentLaneId = LaneController.Instance.ChangeLane(currentLaneId, direction);
@@ -62,11 +68,31 @@ public class Player : MonoBehaviour
 
         while(Vector3.Distance(target, transform.position) > distanceToTarget)
         {
-            var position = Vector3.MoveTowards(transform.position, target, changeLaneSpeed * Time.deltaTime);
-            rigidbody.MovePosition(position);
+            // Freeze movement while in collision routine
+            if(!collided)
+            {
+                var position = Vector3.MoveTowards(transform.position, target, changeLaneSpeed * Time.deltaTime);
+                rigidbody.MovePosition(position);
+            }
+
             yield return new WaitForFixedUpdate();
         }
 
         currentRotuine = null;
+    }
+
+    public void TakeDamage(int damage)
+    {
+        HP = Mathf.Clamp(HP - damage, 0, maxHP);
+    }
+
+    public void OnCollisionStart()
+    {
+        collided = true;
+    }
+
+    public void OnCollisionCompleted()
+    {
+        collided = false;
     }
 }
