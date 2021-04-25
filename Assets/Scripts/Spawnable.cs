@@ -10,6 +10,7 @@ public class Spawnable : MonoBehaviour
     public SpawnableType Type { get { return type; } }
 
     protected ObstacleMover obstacleMover;
+    public ObstacleMover ObstacleMover { get { return obstacleMover; } }
     protected bool isMoving = false;
     public bool IsAvailable { get; protected set; } = true;
 

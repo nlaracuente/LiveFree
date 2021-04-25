@@ -11,6 +11,13 @@ public class ObstacleMover : MonoBehaviour
     public bool IsMoving { get; private set; }
     public bool DestinationReached { get; private set; }
 
+    private void Start()
+    {
+        // When entering into fight mode
+        // All objects still moving need to dissapear 
+        GameManager.Instance.RegisterOnFightStart(PopToDestination);
+    }
+
     public void Move()
     {
         destination = new Vector3(
@@ -42,6 +49,11 @@ public class ObstacleMover : MonoBehaviour
 
     public void PopToDestination()
     {
-        transform.position = destination;
+        if (IsMoving)
+        {
+            IsMoving = false;
+            DestinationReached = true;
+            transform.position = destination;
+        }        
     }
 }

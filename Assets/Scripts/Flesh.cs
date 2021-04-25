@@ -25,8 +25,8 @@ public class Flesh : MonoBehaviour
     [SerializeField]
     float distanceToTarget = .01f;
 
-    [SerializeField]
-    int maxHP = 3;
+    //[SerializeField]
+    //int maxHP = 3;
 
     [SerializeField]
     float laneChangeDelay = 2f;
@@ -36,7 +36,7 @@ public class Flesh : MonoBehaviour
     float DelayBetweenRows { get { return GameManager.Instance.DelayBetweenRows; } }
     float ChangeLaneDelay { get { return laneChangeDelay; } }
     public int HP { get; set; }
-    public int MaxHP { get { return maxHP; } }
+    public int MaxHP { get { return GameManager.Instance.TotalVerses; } }
     
     /// <summary>
     /// Time left before lane change when collision happened
@@ -61,7 +61,7 @@ public class Flesh : MonoBehaviour
 
         obstacleTypes = Enum.GetValues(typeof(SpawnableType)).Cast<SpawnableType>().ToArray();
         spawnablePatterns = GetComponent<SpawnablePatterns>();
-        HP = maxHP;
+        HP = MaxHP;
     }
 
     private void Start()
@@ -75,6 +75,9 @@ public class Flesh : MonoBehaviour
 
         GameManager.Instance.RegisterOnCollisionStart(OnCollisionStart);
         GameManager.Instance.RegisterOnCollisionCompleted(OnCollisionCompleted);
+
+        GameManager.Instance.RegisterOnFightStart(OnCollisionStart);
+        GameManager.Instance.RegisterOnFightCompleted(OnCollisionCompleted);
 
         StartCoroutine(FleshRoutine());
     }
@@ -222,6 +225,6 @@ public class Flesh : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
-        HP = Mathf.Clamp(HP - damage, 0, maxHP);
+        HP = Mathf.Clamp(HP - damage, 0, MaxHP);
     }
 }

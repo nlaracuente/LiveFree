@@ -44,12 +44,18 @@ public class Player : MonoBehaviour
 
         GameManager.Instance.RegisterOnCollisionStart(OnCollisionStart);
         GameManager.Instance.RegisterOnCollisionCompleted(OnCollisionCompleted);
+
+        GameManager.Instance.RegisterOnFightStart(OnCollisionStart);
+        GameManager.Instance.RegisterOnFightCompleted(OnCollisionCompleted);
     }
 
     private void Update()
     {
-        var direction = (int) Input.GetAxisRaw("Horizontal");
-        if (collided || direction == 0 || currentRotuine != null)
+        // Ensures the button has to be released/re-pressed before processing another input
+        var buttonPressed = Input.GetButtonDown("Horizontal");
+        var direction = (int)Input.GetAxisRaw("Horizontal");        
+
+        if (!buttonPressed || collided || direction == 0 || currentRotuine != null)
             return;
 
         currentLaneId = LaneController.Instance.ChangeLane(currentLaneId, direction);

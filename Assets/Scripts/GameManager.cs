@@ -62,6 +62,8 @@ public class GameManager : Singleton<GameManager>
     public float TileSize { get { return tileSize; } }
     public float DelayBetweenWaves { get { return delayBetweenWaves; } }
     public float DelayBetweenRows { get { return delayBetweenRows; } }
+    public int TotalVerses { get { return verses.Length; } }
+
 
     Player player;
     public Player Player
@@ -90,6 +92,8 @@ public class GameManager : Singleton<GameManager>
     public delegate void CollisionEvent();
     private CollisionEvent collisionStartEvents;
     private CollisionEvent collisionCompletedEvents;
+    private CollisionEvent fightStartEvents;
+    private CollisionEvent fightCompletedEvents;
 
     public void RegisterOnCollisionStart(CollisionEvent collisionEvent)
     {
@@ -99,6 +103,16 @@ public class GameManager : Singleton<GameManager>
     public void RegisterOnCollisionCompleted(CollisionEvent collisionEvent)
     {
         collisionCompletedEvents += collisionEvent;
+    }
+
+    public void RegisterOnFightStart(CollisionEvent collisionEvent)
+    {
+        fightStartEvents += collisionEvent;
+    }
+
+    public void RegisterOnFightCompleted(CollisionEvent collisionEvent)
+    {
+        fightCompletedEvents += collisionEvent;
     }
 
     public void OnPlayerCollidedWithObstacle(Obstacle obstacle)
@@ -130,6 +144,9 @@ public class GameManager : Singleton<GameManager>
         Player.TakeDamage(obstacle.Damage);
         yield return new WaitForSeconds(hitRecoveryDelay);
 
+        // Make this obstacle dissapear
+        obstacle.ObstacleMover.PopToDestination();
+
         moveSpeed = speed;
         PlayerCollided = false;
 
@@ -145,7 +162,7 @@ public class GameManager : Singleton<GameManager>
         var speed = moveSpeed;
         moveSpeed = 0f;
 
-        collisionStartEvents?.Invoke();
+        fightStartEvents?.Invoke();
 
         // Lift Player in the air
         var playerOrigin = Player.transform.position;
@@ -176,11 +193,13 @@ public class GameManager : Singleton<GameManager>
 
         yield return StartCoroutine(WordChosenRoutine(playerOrigin, fleshOrigin, isCorrect));
 
-        // Finished
-        if (currentVerseIndex >= verses.Length)
-            GameWon();
+        // This is already handled in the WordChosenRoutine
+        //// Finished
+        //if (currentVerseIndex >= verses.Length)
+        //    GameWon();
 
-        moveSpeed = speed;
+        if(!IsGameOver)
+            moveSpeed = speed;
     }
 
     public void ChosenWord(int index) => chosenWordIndex = index;
@@ -224,7 +243,7 @@ public class GameManager : Singleton<GameManager>
         else
         {
             totalScripturesCollected = 0;
-            collisionCompletedEvents?.Invoke();
+            fightCompletedEvents?.Invoke();
         }   
     }
 
