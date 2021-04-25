@@ -86,4 +86,18 @@ public class AudioManager : Singleton<AudioManager>
 
         return src;
     }
+
+    public AudioSource PlayRandomPitchClip(AudioClip clip, float min = 0.85f, float max = 1f)
+    {
+        var src = GetAvailableSource();
+        if (src == null || clip == null)
+            return null;
+
+        src.volume = sfxVolume;
+        src.clip = clip;
+        src.pitch = Random.Range(min, max);
+        src.Play();
+
+        return src;
+    }
 }

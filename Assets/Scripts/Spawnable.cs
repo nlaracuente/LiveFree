@@ -9,6 +9,9 @@ public class Spawnable : MonoBehaviour
     protected SpawnableType type;
     public SpawnableType Type { get { return type; } }
 
+    [SerializeField]
+    protected new Renderer renderer;
+
     protected ObstacleMover obstacleMover;
     public ObstacleMover ObstacleMover { get { return obstacleMover; } }
     protected bool isMoving = false;
@@ -17,6 +20,8 @@ public class Spawnable : MonoBehaviour
     private void Awake()
     {
         obstacleMover = GetComponent<ObstacleMover>();
+        if(renderer == null)
+            renderer = GetComponentInChildren<Renderer>();
     }
 
     private void LateUpdate()
@@ -39,8 +44,8 @@ public class Spawnable : MonoBehaviour
             zPosition
         );
 
-        gameObject.SetActive(true);
-        
+        renderer.enabled = true;
+        gameObject.SetActive(true);        
     }
 
     public void Move()

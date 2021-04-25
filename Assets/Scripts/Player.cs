@@ -72,7 +72,7 @@ public class Player : MonoBehaviour
             transform.position.z
         );
 
-        AudioManager.Instance.PlayClip(AudioLibrary.Instance.playerMoveClip);
+        AudioManager.Instance.PlayRandomPitchClip(AudioLibrary.Instance.playerMoveClip);
         while(Vector3.Distance(target, transform.position) > distanceToTarget)
         {
             // Freeze movement while in collision routine

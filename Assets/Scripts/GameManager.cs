@@ -127,7 +127,7 @@ public class GameManager : Singleton<GameManager>
     public void OnScripturePickedUp()
     {
         totalScripturesCollected++;
-
+        AudioManager.Instance.PlayRandomPitchClip(AudioLibrary.Instance.scripturePickedUpClip);
         if (totalScripturesCollected < totalScriptures)
             return;
 
@@ -141,11 +141,13 @@ public class GameManager : Singleton<GameManager>
 
         // Notify anyone interest about the player collision
         collisionStartEvents?.Invoke();
-        Player.TakeDamage(obstacle.Damage);
-        yield return new WaitForSeconds(hitRecoveryDelay);
 
-        // Make this obstacle dissapear
-        obstacle.ObstacleMover.PopToDestination();
+        // Trigger collision effect
+        obstacle.OnPlayerCollision();
+        Player.TakeDamage(obstacle.Damage);
+        AudioManager.Instance.PlayRandomPitchClip(AudioLibrary.Instance.playerCrashedClip);
+
+        yield return new WaitForSeconds(hitRecoveryDelay);
 
         moveSpeed = speed;
         PlayerCollided = false;
@@ -192,14 +194,7 @@ public class GameManager : Singleton<GameManager>
             currentVerseIndex++;
 
         yield return StartCoroutine(WordChosenRoutine(playerOrigin, fleshOrigin, isCorrect));
-
-        // This is already handled in the WordChosenRoutine
-        //// Finished
-        //if (currentVerseIndex >= verses.Length)
-        //    GameWon();
-
-        if(!IsGameOver)
-            moveSpeed = speed;
+        moveSpeed = speed;
     }
 
     public void ChosenWord(int index) => chosenWordIndex = index;
