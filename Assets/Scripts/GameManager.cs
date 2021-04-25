@@ -22,6 +22,9 @@ public class GameManager : Singleton<GameManager>
     float delayBetweenRows = 1f;
 
     [SerializeField]
+    float playerPunchDelay = .25f;
+
+    [SerializeField]
     int totalScriptures = 3;
 
     [SerializeField]
@@ -166,13 +169,18 @@ public class GameManager : Singleton<GameManager>
 
         fightStartEvents?.Invoke();
 
-        // Lift Player in the air
+        // Snap the enemy to within punching distance
+        var fleshOrigin = Flesh.transform.position;
+        Flesh.transform.position = fleshPunchTargetDestination.position;
+
+        // Make the player jump and wait
+        player.Jump();
         var playerOrigin = Player.transform.position;
-        StartCoroutine(MoveToDestination(Player.transform, playerJumpDestination.position, playerJumpSpeed));
+        yield return StartCoroutine(MoveToDestination(Player.transform, playerJumpDestination.position, playerJumpSpeed));
 
         // Reel the flesh in
-        var fleshOrigin = Flesh.transform.position;
-        yield return StartCoroutine(MoveToDestination(Flesh.transform, fleshPunchTargetDestination.position, fleshMoveToPlayerSpeed));
+        
+        // yield return StartCoroutine(MoveToDestination(Flesh.transform, fleshPunchTargetDestination.position, fleshMoveToPlayerSpeed));
 
         // Display verse
         chosenWordIndex = -1;
@@ -213,23 +221,29 @@ public class GameManager : Singleton<GameManager>
 
     IEnumerator WordChosenRoutine(Vector3 playerOrigin, Vector3 fleshOrigin, bool isCorrect)
     {
-        // TODO: Add Hit or Miss animation
-        yield return new WaitForEndOfFrame();
+        // Wait for the punch to complete
+        var src = AudioManager.Instance.PlayClip(AudioLibrary.Instance.playerPunchCryClip);
+        // Wait a bit for the "Take" part
+        yield return new WaitForSeconds(src.clip.length * 0.4f);
+
+        Player.Punch();
+        yield return new WaitForSeconds(playerPunchDelay);
 
         // Inflict the damage now so that it looks like it is the reason 
         // why the flesh is being pushed back
         if (isCorrect)
-            Flesh.TakeDamage(damageToFleshPerHit);            
-
-        // Post said anuamtion
+        {
+            Flesh.TakeDamage(damageToFleshPerHit);
+            AudioManager.Instance.PlayClip(AudioLibrary.Instance.punchHitClip);
+        } else
+        {
+            Player.TakeDamage(damageToFleshPerHit);
+            AudioManager.Instance.PlayerRandomClip(AudioLibrary.Instance.punchMissedClips);
+        }
+        
+        // Reset positions
         StartCoroutine(MoveToDestination(Player.transform, playerOrigin, playerJumpSpeed));
         yield return StartCoroutine(MoveToDestination(Flesh.transform, fleshOrigin, fleshMoveToPlayerSpeed));
-
-        // Get hurt now so that it looks like it was the fall that hurt
-        if (!isCorrect)
-            Player.TakeDamage(damageToFleshPerHit);
-
-        yield return new WaitForEndOfFrame();
 
         if (Flesh.HP < 1)
             GameWon();

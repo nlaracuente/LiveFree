@@ -17,6 +17,9 @@ public class Player : MonoBehaviour
     int maxHP = 3;
 
     [SerializeField]
+    Animator animator;
+
+    [SerializeField]
     new Rigidbody rigidbody;
 
     IEnumerator currentRotuine;
@@ -53,7 +56,9 @@ public class Player : MonoBehaviour
     {
         // Ensures the button has to be released/re-pressed before processing another input
         var buttonPressed = Input.GetButtonDown("Horizontal");
-        var direction = (int)Input.GetAxisRaw("Horizontal");        
+        var direction = (int)Input.GetAxisRaw("Horizontal");
+
+        animator.SetBool("Running", !disableControl);
 
         if (disableControl || !buttonPressed || currentRotuine != null)
             return;
@@ -76,7 +81,7 @@ public class Player : MonoBehaviour
         while(Vector3.Distance(target, transform.position) > distanceToTarget)
         {
             // Freeze movement while in collision routine
-            if(!disableControl)
+            if (!disableControl)
             {
                 var position = Vector3.MoveTowards(transform.position, target, changeLaneSpeed * Time.deltaTime);
                 rigidbody.MovePosition(position);
@@ -102,4 +107,7 @@ public class Player : MonoBehaviour
     {
         disableControl = false;
     }
+
+    public void Jump() => animator.SetTrigger("Jump");
+    public void Punch() => animator.SetTrigger("Punch");
 }

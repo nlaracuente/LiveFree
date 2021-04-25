@@ -100,4 +100,10 @@ public class AudioManager : Singleton<AudioManager>
 
         return src;
     }
+
+    public AudioSource PlayerRandomClip(AudioClip[] clips)
+    {
+        var clip = Utility.RandomizeArray(clips).First();
+        return PlayClip(clip);
+    }
 }
