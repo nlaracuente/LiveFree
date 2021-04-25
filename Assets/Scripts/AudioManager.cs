@@ -47,13 +47,16 @@ public class AudioManager : Singleton<AudioManager>
 
     private void Update()
     {
+        sources.ForEach(s => s.volume = sfxVolume);
+
+        if (musicSource == null)
+            return;
+
         musicSource.volume = musicVolume;
         if (disableMusic)
             musicSource.Pause();
         else if (!musicSource.isPlaying)
             musicSource.Play();
-
-        sources.ForEach(s => s.volume = sfxVolume);
     }
 
     private AudioSource SpawnAudioSource(string sourceName)

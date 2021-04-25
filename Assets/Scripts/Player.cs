@@ -17,13 +17,13 @@ public class Player : MonoBehaviour
     int maxHP = 3;
 
     [SerializeField]
-    Rigidbody rigidbody;
+    new Rigidbody rigidbody;
 
     IEnumerator currentRotuine;
     public int HP { get; set; }
     public int MaxHP { get { return maxHP; } }
 
-    bool collided = false;
+    bool disableControl = false;
 
     private void Awake()
     {
@@ -42,11 +42,11 @@ public class Player : MonoBehaviour
             transform.position.z
         );
 
-        GameManager.Instance.RegisterOnCollisionStart(OnCollisionStart);
-        GameManager.Instance.RegisterOnCollisionCompleted(OnCollisionCompleted);
+        GameManager.Instance.RegisterOnCollisionStart(TriggerDisableControl);
+        GameManager.Instance.RegisterOnCollisionCompleted(TriggerResumeControl);
 
-        GameManager.Instance.RegisterOnFightStart(OnCollisionStart);
-        GameManager.Instance.RegisterOnFightCompleted(OnCollisionCompleted);
+        GameManager.Instance.RegisterOnFightStart(TriggerDisableControl);
+        GameManager.Instance.RegisterOnFightCompleted(TriggerResumeControl);
     }
 
     private void Update()
@@ -55,7 +55,7 @@ public class Player : MonoBehaviour
         var buttonPressed = Input.GetButtonDown("Horizontal");
         var direction = (int)Input.GetAxisRaw("Horizontal");        
 
-        if (!buttonPressed || collided || direction == 0 || currentRotuine != null)
+        if (disableControl || !buttonPressed || currentRotuine != null)
             return;
 
         currentLaneId = LaneController.Instance.ChangeLane(currentLaneId, direction);
@@ -72,10 +72,11 @@ public class Player : MonoBehaviour
             transform.position.z
         );
 
+        AudioManager.Instance.PlayClip(AudioLibrary.Instance.playerMoveClip);
         while(Vector3.Distance(target, transform.position) > distanceToTarget)
         {
             // Freeze movement while in collision routine
-            if(!collided)
+            if(!disableControl)
             {
                 var position = Vector3.MoveTowards(transform.position, target, changeLaneSpeed * Time.deltaTime);
                 rigidbody.MovePosition(position);
@@ -92,13 +93,13 @@ public class Player : MonoBehaviour
         HP = Mathf.Clamp(HP - damage, 0, maxHP);
     }
 
-    public void OnCollisionStart()
+    public void TriggerDisableControl()
     {
-        collided = true;
+        disableControl = true;
     }
 
-    public void OnCollisionCompleted()
+    public void TriggerResumeControl()
     {
-        collided = false;
+        disableControl = false;
     }
 }

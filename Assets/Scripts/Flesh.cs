@@ -7,15 +7,6 @@ using System.Linq;
 [RequireComponent(typeof(SpawnablePatterns))]
 public class Flesh : MonoBehaviour
 {
-    enum Phase
-    {
-        Idle,
-        WaitingForStartOfWave,
-        SpawningWave,
-    }
-
-    Phase phase;
-
     [SerializeField]
     LaneId currentLaneId = LaneId.MiddleLane;
 
@@ -30,36 +21,25 @@ public class Flesh : MonoBehaviour
 
     [SerializeField]
     float laneChangeDelay = 2f;
-    float laneChangeTime = 0f;
 
     float DelayBetweenWaves { get { return GameManager.Instance.DelayBetweenWaves; } }
     float DelayBetweenRows { get { return GameManager.Instance.DelayBetweenRows; } }
     float ChangeLaneDelay { get { return laneChangeDelay; } }
     public int HP { get; set; }
     public int MaxHP { get { return GameManager.Instance.TotalVerses; } }
-    
-    /// <summary>
-    /// Time left before lane change when collision happened
-    /// </summary>
-    float laneChangeTimeRemainder = 0f;
 
-    bool playerCollided = false;
+    bool pauseControl = false;
 
     [SerializeField]
-    Rigidbody rigidbody;
+    new Rigidbody rigidbody;
 
     SpawnablePatterns spawnablePatterns;
-
-    SpawnableType[] obstacleTypes;
-
-    IEnumerator moveRoutine;
 
     private void Awake()
     {
         if (rigidbody == null)
             rigidbody = GetComponent<Rigidbody>();
 
-        obstacleTypes = Enum.GetValues(typeof(SpawnableType)).Cast<SpawnableType>().ToArray();
         spawnablePatterns = GetComponent<SpawnablePatterns>();
         HP = MaxHP;
     }
@@ -73,11 +53,11 @@ public class Flesh : MonoBehaviour
             transform.position.z
         );
 
-        GameManager.Instance.RegisterOnCollisionStart(OnCollisionStart);
-        GameManager.Instance.RegisterOnCollisionCompleted(OnCollisionCompleted);
+        GameManager.Instance.RegisterOnCollisionStart(TriggerPauseControl);
+        GameManager.Instance.RegisterOnCollisionCompleted(TriggerResumeControl);
 
-        GameManager.Instance.RegisterOnFightStart(OnCollisionStart);
-        GameManager.Instance.RegisterOnFightCompleted(OnCollisionCompleted);
+        GameManager.Instance.RegisterOnFightStart(TriggerPauseControl);
+        GameManager.Instance.RegisterOnFightCompleted(TriggerResumeControl);
 
         StartCoroutine(FleshRoutine());
     }
@@ -107,7 +87,7 @@ public class Flesh : MonoBehaviour
         var waitTime = Time.time + delay;
         while(Time.time <= waitTime)
         {
-            if (playerCollided)
+            if (pauseControl)
             {
                 // save the time we had left so that we can resume waiting once collision is over
                 var remainingTime = Time.time - waitTime;
@@ -115,7 +95,7 @@ public class Flesh : MonoBehaviour
                     remainingTime = 0;
 
                 // Wait until collision is done
-                while (playerCollided)
+                while (pauseControl)
                     yield return new WaitForEndOfFrame();
 
                 // Reset our wait time 
@@ -137,6 +117,10 @@ public class Flesh : MonoBehaviour
             spawnables.Clear();
             for (int x = 0; x < pattern.GetLength(0); x++)
             {
+                // Wait before we spawn again if we have to wait
+                while (pauseControl)
+                    yield return new WaitForEndOfFrame();
+
                 // Patterns only tells us which "prefab" to use
                 var prefab = pattern[x, y];
 
@@ -189,7 +173,7 @@ public class Flesh : MonoBehaviour
             while (Vector3.Distance(target, transform.position) > distanceToTarget)
             {
                 // Don't move while we wait for the player collision routine to end
-                if (!playerCollided)
+                if (!pauseControl)
                 {
                     var position = Vector3.MoveTowards(transform.position, target, changeLaneSpeed * Time.deltaTime);
                     rigidbody.MovePosition(position);
@@ -205,22 +189,14 @@ public class Flesh : MonoBehaviour
     /// <summary>
     /// Save how much time there was left before the next "spawn cycle"
     /// </summary>
-    public void OnCollisionStart()
+    public void TriggerPauseControl()
     {
-        playerCollided = true;
-
-        //laneChangeTimeRemainder = laneChangeTime - Time.time;
-        //if (laneChangeTimeRemainder < 0)
-        //    laneChangeTimeRemainder = 0f; // We were at lane change time
+        pauseControl = true;
     }
 
-    public void OnCollisionCompleted()
+    public void TriggerResumeControl()
     {
-        // Update the wait time to be whatever time we had left
-        //if (laneChangeTimeRemainder > 0)
-        //    laneChangeTime = Time.time + laneChangeTimeRemainder;
-
-        playerCollided = false;
+        pauseControl = false;
     }
 
     public void TakeDamage(int damage)
