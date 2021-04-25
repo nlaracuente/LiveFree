@@ -39,4 +39,9 @@ public class ObstacleMover : MonoBehaviour
             DestinationReached = true;
         }
     }
+
+    public void PopToDestination()
+    {
+        transform.position = destination;
+    }
 }

@@ -20,7 +20,7 @@ public class Player : MonoBehaviour
     Rigidbody rigidbody;
 
     IEnumerator currentRotuine;
-    public int HP { get; protected set; }
+    public int HP { get; set; }
     public int MaxHP { get { return maxHP; } }
 
     bool collided = false;

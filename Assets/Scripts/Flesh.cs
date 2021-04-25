@@ -26,16 +26,17 @@ public class Flesh : MonoBehaviour
     float distanceToTarget = .01f;
 
     [SerializeField]
+    int maxHP = 3;
+
+    [SerializeField]
     float laneChangeDelay = 2f;
     float laneChangeTime = 0f;
 
     float DelayBetweenWaves { get { return GameManager.Instance.DelayBetweenWaves; } }
     float DelayBetweenRows { get { return GameManager.Instance.DelayBetweenRows; } }
     float ChangeLaneDelay { get { return laneChangeDelay; } }
-
-    float timeUntillNextWave = 0f;
-    float timeUntilNextSpawn = 0f;
-    float timeUntilLaneChange = 0f;
+    public int HP { get; set; }
+    public int MaxHP { get { return maxHP; } }
     
     /// <summary>
     /// Time left before lane change when collision happened
@@ -60,6 +61,7 @@ public class Flesh : MonoBehaviour
 
         obstacleTypes = Enum.GetValues(typeof(SpawnableType)).Cast<SpawnableType>().ToArray();
         spawnablePatterns = GetComponent<SpawnablePatterns>();
+        HP = maxHP;
     }
 
     private void Start()
@@ -83,6 +85,10 @@ public class Flesh : MonoBehaviour
     /// <returns></returns>
     IEnumerator FleshRoutine()
     {
+        // This will keep running until game over
+        // Which is what we want to make the Flesh look like it's active and moving
+        StartCoroutine(ChangeLaneRoutine());
+
         while (!GameManager.Instance.IsGameOver)
         {
             // Wait until we can spawn the next wave
@@ -162,37 +168,35 @@ public class Flesh : MonoBehaviour
 
     IEnumerator ChangeLaneRoutine()
     {
-        var id = LaneController.Instance.GetRandomLaneId();
-        var lane = LaneController.Instance.GetLaneById(id);
+        // Initial wait before we change lanes
+        yield return StartCoroutine(WaitRoutine(ChangeLaneDelay));
 
-        var target = new Vector3(
-            lane.position.x,
-            transform.position.y,
-            transform.position.z
-        );
-
-        // We want to keep moving even after "resuming"
-        while (Vector3.Distance(target, transform.position) > distanceToTarget)
+        while (!GameManager.Instance.IsGameOver)
         {
-            // Don't move while we wait for the player collision routine to end
-            if (!playerCollided)
+            var id = LaneController.Instance.GetRandomLaneId();
+            var lane = LaneController.Instance.GetLaneById(id);
+
+            var target = new Vector3(
+                lane.position.x,
+                transform.position.y,
+                transform.position.z
+            );
+
+            // We want to keep moving even after "resuming"
+            while (Vector3.Distance(target, transform.position) > distanceToTarget)
             {
-                var position = Vector3.MoveTowards(transform.position, target, changeLaneSpeed * Time.deltaTime);
-                rigidbody.MovePosition(position);
+                // Don't move while we wait for the player collision routine to end
+                if (!playerCollided)
+                {
+                    var position = Vector3.MoveTowards(transform.position, target, changeLaneSpeed * Time.deltaTime);
+                    rigidbody.MovePosition(position);
+                }
+
+                yield return new WaitForFixedUpdate();
             }
 
-            yield return new WaitForFixedUpdate();
+            yield return StartCoroutine(WaitRoutine(ChangeLaneDelay));
         }
-
-        // Give it a frame to see the movement completed
-        yield return new WaitForEndOfFrame();
-
-        // Wait until the player collision routine is done
-        // then we can continue with spawning
-        while (playerCollided)
-            yield return new WaitForEndOfFrame();
-
-        moveRoutine = null;
     }
 
     /// <summary>
@@ -214,5 +218,10 @@ public class Flesh : MonoBehaviour
         //    laneChangeTime = Time.time + laneChangeTimeRemainder;
 
         playerCollided = false;
+    }
+
+    public void TakeDamage(int damage)
+    {
+        HP = Mathf.Clamp(HP - damage, 0, maxHP);
     }
 }
