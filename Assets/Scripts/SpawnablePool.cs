@@ -2,26 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ObstaclePool : Singleton<ObstaclePool>
+public class SpawnablePool : Singleton<SpawnablePool>
 {
     [SerializeField]
-    Obstacle[] obstacles;
+    Spawnable[] spawnables;
 
     [SerializeField]
     int poolSizePerType = 10;
 
-    Dictionary<ObstacleType, Obstacle[]> pool;
+    Dictionary<SpawnableType, Spawnable[]> pool;
 
-    private void Awake()
+    private void Start()
     {
         CreatePool();        
     }
 
     void CreatePool()
     {
-        pool = new Dictionary<ObstacleType, Obstacle[]>();
+        pool = new Dictionary<SpawnableType, Spawnable[]>();
 
-        foreach (var prefab in obstacles)
+        foreach (var prefab in spawnables)
         {
             var type = prefab.Type;
 
@@ -29,25 +29,28 @@ public class ObstaclePool : Singleton<ObstaclePool>
             if (pool.ContainsKey(type))
                 continue;
 
-            pool.Add(type, new Obstacle[poolSizePerType]);
+            pool.Add(type, new Spawnable[poolSizePerType]);
             for (int i = 0; i < poolSizePerType; i++)
             {
                 // Spawn the object where the pool is at 
                 // which should be outside of the game view
-                var obstacle = Instantiate(prefab.GameObject, transform).GetComponent<Obstacle>();
-                obstacle.transform.position = new Vector3(
+                var spawnable = Instantiate(prefab.gameObject, transform).GetComponent<Spawnable>();
+                spawnable.transform.position = new Vector3(
                     transform.position.x,
-                    obstacle.transform.position.y,
+                    spawnable.transform.position.y,
                     transform.position.z
                 );
-                pool[type][i] = obstacle;
+                pool[type][i] = spawnable;
             }
         }
     }
 
-    public Obstacle GetNextAvailable(ObstacleType type)
+    public Spawnable GetNextAvailable(SpawnableType type)
     {
-        Obstacle available = null;
+        Spawnable available = null;
+
+        if (!pool.ContainsKey(type))
+            return available;
 
         foreach (var obstacle in pool[type])
         {

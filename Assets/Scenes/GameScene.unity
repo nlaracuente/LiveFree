@@ -658,6 +658,7 @@ GameObject:
   - component: {fileID: 408591151}
   - component: {fileID: 408591149}
   - component: {fileID: 408591150}
+  - component: {fileID: 408591152}
   m_Layer: 0
   m_Name: Flesh
   m_TagString: Untagged
@@ -713,6 +714,27 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &408591152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408591148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71167fe992af81048a685c6122e60435, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  prefabs:
+  - pixleColor: {r: 0, g: 0, b: 0, a: 1}
+    prefab: {fileID: 1449239438092185210, guid: a2b65e7ecd31f454d98dd70f47b2dca0,
+      type: 3}
+  - pixleColor: {r: 1, g: 1, b: 0, a: 1}
+    prefab: {fileID: 8621564412264250629, guid: 00d536776712b8849946ce19c2725436,
+      type: 3}
+  patternTextures:
+  - {fileID: 2800000, guid: 48a1bf6bd84d5e14aa57ddce59d2785b, type: 3}
 --- !u!1 &412261721
 GameObject:
   m_ObjectHideFlags: 0
@@ -754,7 +776,7 @@ GameObject:
   - component: {fileID: 497025160}
   - component: {fileID: 497025159}
   m_Layer: 0
-  m_Name: ObstaclePool
+  m_Name: SpawnablePool
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -773,8 +795,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPersistent: 0
-  obstacles:
+  spawnables:
   - {fileID: 1449239438092185210, guid: a2b65e7ecd31f454d98dd70f47b2dca0, type: 3}
+  - {fileID: 8621564412264250629, guid: 00d536776712b8849946ce19c2725436, type: 3}
   poolSizePerType: 10
 --- !u!4 &497025160
 Transform:
@@ -1509,9 +1532,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPersistent: 1
+  tileSize: 3
   moveSpeed: 20
   hitRecoveryDelay: 1
-  totalScriptures: 7
+  delayBetweenWaves: 2
+  delayBetweenRows: 0.5
+  totalScriptures: 3
   totalScripturesCollected: 1
 --- !u!4 &1192494699
 Transform:

@@ -6,10 +6,19 @@ using UnityEngine.SceneManagement;
 public class GameManager : Singleton<GameManager>
 {
     [SerializeField]
+    float tileSize = 3;
+
+    [SerializeField]
     float moveSpeed = 5f;
 
     [SerializeField]
     float hitRecoveryDelay = 1f;
+
+    [SerializeField]
+    float delayBetweenWaves = 5f;
+
+    [SerializeField]
+    float delayBetweenRows = 1f;
 
     [SerializeField]
     int totalScriptures = 3;
@@ -19,9 +28,12 @@ public class GameManager : Singleton<GameManager>
 
     public float MoveSpeed { get { return moveSpeed; } }
     public bool PlayerCollided { get; private set; }
-    public bool IsGamePaused { get { return PlayerCollided || MoveSpeed == 0; } }
+    public bool IsGameOver { get; private set; } = false;
     public int TotalScripturesCollected { get { return totalScripturesCollected; } }
     public int TotalScriptures { get { return totalScriptures; } }
+    public float TileSize { get { return tileSize; } }
+    public float DelayBetweenWaves { get { return delayBetweenWaves; } }
+    public float DelayBetweenRows { get { return delayBetweenRows; } }
 
     Player player;
     public Player Player
@@ -78,6 +90,7 @@ public class GameManager : Singleton<GameManager>
 
     void GameOver()
     {
+        IsGameOver = true;
         MenuController.Instance.ShowGameOverMenu();
         Time.timeScale = 0f;
     }
@@ -85,8 +98,9 @@ public class GameManager : Singleton<GameManager>
     public void Continue()
     {
         UnregisterEventHandlers();
+        IsGameOver = false;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        Time.timeScale = 1f;
+        Time.timeScale = 1f;        
     }
 
     void UnregisterEventHandlers()
