@@ -127,7 +127,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4aab2242b0252864b83f9082b1b30ab7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  zTarget: -35
+  zTarget: -10
 --- !u!114 &8621564412264250629
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -141,6 +141,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   type: 1
+  renderer: {fileID: 0}
 --- !u!65 &7844893709654647866
 BoxCollider:
   m_ObjectHideFlags: 0

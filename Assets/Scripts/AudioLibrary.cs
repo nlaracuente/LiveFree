@@ -8,7 +8,12 @@ public class AudioLibrary : Singleton<AudioLibrary>
     public AudioClip playerCrashedClip;
     public AudioClip scripturePickedUpClip;
     public AudioClip playerPunchCryClip;
+    public AudioClip playerLoseClip;
 
     public AudioClip punchHitClip;
     public AudioClip[] punchMissedClips;
+
+    public AudioClip impossibleClip;
+    public AudioClip fleshExplodesClip;
+    public AudioClip fleshLaughingClip;
 }

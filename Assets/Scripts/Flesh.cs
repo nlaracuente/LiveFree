@@ -16,11 +16,21 @@ public class Flesh : MonoBehaviour
     [SerializeField]
     float distanceToTarget = .01f;
 
+    [SerializeField]
+    float spawnableStartingZPos = 70f;
+
     //[SerializeField]
     //int maxHP = 3;
 
     [SerializeField]
     float laneChangeDelay = 2f;
+
+    [SerializeField]
+    ParticleSystem particleSystem;
+
+    [SerializeField]
+    new Renderer renderer;
+    
 
     float DelayBetweenWaves { get { return GameManager.Instance.DelayBetweenWaves; } }
     float DelayBetweenRows { get { return GameManager.Instance.DelayBetweenRows; } }
@@ -39,6 +49,12 @@ public class Flesh : MonoBehaviour
     {
         if (rigidbody == null)
             rigidbody = GetComponent<Rigidbody>();
+
+        if (renderer == null)
+            renderer = GetComponentInChildren<Renderer>();
+
+        if (particleSystem == null)
+            particleSystem = GetComponentInChildren<ParticleSystem>();
 
         spawnablePatterns = GetComponent<SpawnablePatterns>();
         HP = MaxHP;
@@ -70,7 +86,7 @@ public class Flesh : MonoBehaviour
     {
         // This will keep running until game over
         // Which is what we want to make the Flesh look like it's active and moving
-        StartCoroutine(ChangeLaneRoutine());
+        // StartCoroutine(ChangeLaneRoutine());
 
         while (!GameManager.Instance.IsGameOver)
         {
@@ -139,7 +155,7 @@ public class Flesh : MonoBehaviour
                     // 2 - 1 = 1 (right lane) 
                     var xPos = (x - 1) * GameManager.Instance.TileSize;
 
-                    spawnable.Spawn(xPos, transform.position.z);
+                    spawnable.Spawn(xPos, spawnableStartingZPos);
                     spawnables.Add(spawnable);
                 }
             }
@@ -197,10 +213,17 @@ public class Flesh : MonoBehaviour
     public void TriggerResumeControl()
     {
         pauseControl = false;
+        renderer.enabled = true;
     }
 
     public void TakeDamage(int damage)
     {
         HP = Mathf.Clamp(HP - damage, 0, MaxHP);
+    }
+
+    public void Explode()
+    {
+        renderer.enabled = false;
+        particleSystem?.Play();
     }
 }

@@ -11,6 +11,7 @@ public class GameManager : Singleton<GameManager>
 
     [SerializeField]
     float moveSpeed = 5f;
+    float originalMoveSpeed = 0f;
 
     [SerializeField]
     float hitRecoveryDelay = 1f;
@@ -98,6 +99,11 @@ public class GameManager : Singleton<GameManager>
     private CollisionEvent fightStartEvents;
     private CollisionEvent fightCompletedEvents;
 
+    private void Start()
+    {
+        originalMoveSpeed = moveSpeed;
+    }
+
     public void RegisterOnCollisionStart(CollisionEvent collisionEvent)
     {
         collisionStartEvents += collisionEvent;
@@ -152,13 +158,14 @@ public class GameManager : Singleton<GameManager>
 
         yield return new WaitForSeconds(hitRecoveryDelay);
 
-        moveSpeed = speed;
-        PlayerCollided = false;
-
         if (Player.HP < 1)
-            GameOver();
+            StartCoroutine(GameOverRoutine());
         else
+        {
+            moveSpeed = speed;
+            PlayerCollided = false;
             collisionCompletedEvents?.Invoke();
+        }   
     }
 
     IEnumerator PunchRoutine()
@@ -171,7 +178,8 @@ public class GameManager : Singleton<GameManager>
 
         // Snap the enemy to within punching distance
         var fleshOrigin = Flesh.transform.position;
-        Flesh.transform.position = fleshPunchTargetDestination.position;
+        // Flesh.transform.position = fleshPunchTargetDestination.position;
+        StartCoroutine(MoveToDestination(Flesh.transform, fleshPunchTargetDestination.position, fleshMoveToPlayerSpeed));
 
         // Make the player jump and wait
         player.Jump();
@@ -202,7 +210,9 @@ public class GameManager : Singleton<GameManager>
             currentVerseIndex++;
 
         yield return StartCoroutine(WordChosenRoutine(playerOrigin, fleshOrigin, isCorrect));
-        moveSpeed = speed;
+
+        if(!IsGameOver)
+            moveSpeed = speed;
     }
 
     public void ChosenWord(int index) => chosenWordIndex = index;
@@ -235,20 +245,22 @@ public class GameManager : Singleton<GameManager>
         {
             Flesh.TakeDamage(damageToFleshPerHit);
             AudioManager.Instance.PlayClip(AudioLibrary.Instance.punchHitClip);
-        } else
-        {
-            Player.TakeDamage(damageToFleshPerHit);
-            AudioManager.Instance.PlayerRandomClip(AudioLibrary.Instance.punchMissedClips);
-        }
+        } 
+        // Not triggering this for now as the player can't tell they lost health
+        //else
+        //{
+        //    Player.TakeDamage(damageToFleshPerHit);
+        //    AudioManager.Instance.PlayerRandomClip(AudioLibrary.Instance.punchMissedClips);
+        //}
         
         // Reset positions
         StartCoroutine(MoveToDestination(Player.transform, playerOrigin, playerJumpSpeed));
         yield return StartCoroutine(MoveToDestination(Flesh.transform, fleshOrigin, fleshMoveToPlayerSpeed));
 
         if (Flesh.HP < 1)
-            GameWon();
-        else if (Player.HP < 1)
-            GameOver();
+            StartCoroutine(GameWonRoutine());
+        //else if (Player.HP < 1)
+        //    StartCoroutine(GameOverRoutine());
         else
         {
             totalScripturesCollected = 0;
@@ -256,30 +268,48 @@ public class GameManager : Singleton<GameManager>
         }   
     }
 
-    void GameOver()
+    IEnumerator GameWonRoutine()
     {
         IsGameOver = true;
-        MenuController.Instance.ShowGameOverMenu();
-        Time.timeScale = 0f;
+        var src = AudioManager.Instance.PlayClip(AudioLibrary.Instance.impossibleClip);
+        yield return new WaitForSeconds(src.clip.length);
+
+        Flesh.Explode();
+        src = AudioManager.Instance.PlayClip(AudioLibrary.Instance.fleshExplodesClip);
+        yield return new WaitForSeconds(src.clip.length);
+
+        MenuController.Instance.ShowGameWonMenu();
     }
 
-    void GameWon()
+    IEnumerator GameOverRoutine()
     {
         IsGameOver = true;
-        MenuController.Instance.ShowGameWonMenu();
-        Time.timeScale = 0f;
+        var src = AudioManager.Instance.PlayClip(AudioLibrary.Instance.playerLoseClip);
+        yield return new WaitForSeconds(src.clip.length);
+
+        src = AudioManager.Instance.PlayClip(AudioLibrary.Instance.fleshLaughingClip);
+        yield return new WaitForSeconds(src.clip.length);
+
+        MenuController.Instance.ShowGameOverMenu();
     }
 
     public void Continue()
-    {        
+    {
+        MenuController.Instance.CloseMenus();
+
+        // A hack to make everything disapear :P
+        fightStartEvents?.Invoke();
+
         IsGameOver = false;
+        PlayerCollided = false;
         currentVerseIndex = 0;
         totalScripturesCollected = 0;
         Flesh.HP = Flesh.MaxHP;
         Player.HP = Player.MaxHP;
+        moveSpeed = originalMoveSpeed;        
+
+        // Ensure everything resets/starts moving
         collisionCompletedEvents?.Invoke();
-        MenuController.Instance.CloseMenus();
-        Time.timeScale = 1f;
     }
 
     void UnregisterEventHandlers()
