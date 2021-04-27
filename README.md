@@ -1,7 +1,7 @@
 ![alt text][screenshot]
 
 # Live Free
-[Entry Page](https://ldjam.com/events/ludum-dare/48/live-free) \n
+[Entry Page](https://ldjam.com/events/ludum-dare/48/live-free) \
 Live Free is my compo entry for the LudumDare 48 Game Jam.\
 The theme this time was "Deeper and Deeper" \
 "Compo" is where you have to make everything alone from scratch in 48 hours.
